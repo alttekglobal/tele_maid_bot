@@ -1,0 +1,34 @@
+{
+  "name": "tele_maid_bot",
+  "version": "1.0.0",
+  "description": "telegram, atg, alttekglobal, chatbot, milktea, tatsua",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alttekglobal/tele_maid_bot.git"
+  },
+  "keywords": [
+    "telegram",
+    "alt",
+    "alttekglobal",
+    "chatbot",
+    "milktea",
+    "tatsua"
+  ],
+  "author": "Lam Do",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/alttekglobal/tele_maid_bot/issues"
+  },
+  "homepage": "https://github.com/alttekglobal/tele_maid_bot#readme",
+  "dependencies": {
+    "node-telegram-bot-api": "^0.40.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.2"
+  }
+}
