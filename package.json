@@ -26,7 +26,9 @@
   },
   "homepage": "https://github.com/alttekglobal/tele_maid_bot#readme",
   "dependencies": {
-    "node-telegram-bot-api": "^0.40.0"
+    "node-cron": "^2.0.3",
+    "node-telegram-bot-api": "^0.40.0",
+    "sqlite3": "^4.1.1"
   },
   "devDependencies": {
     "nodemon": "^2.0.2"
