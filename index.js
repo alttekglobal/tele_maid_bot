@@ -1,6 +1,7 @@
 
 const { db } = require('./modules/persitance');
 const generator = require('./modules/helper');
+const cron = require('node-cron');
 
 const YOUR_BOT_TOKEN = '1140790627:AAFNDpV-FJinAsGo38aHg7bifU6gC52SHzQ';
 const TelegramBot = require('node-telegram-bot-api'),
@@ -14,7 +15,7 @@ bot.on("message", (message, match) => {
     console.log("CHAT: ", chat);
     console.log("match: ", match);
 
-    const { id } = chat; 
+    const { id } = chat;
     const { first_name, last_name } = from;
     if (entities) {
         console.log("ENTITIES");
@@ -25,26 +26,26 @@ bot.on("message", (message, match) => {
                 const { user } = entity;
                 console.log("user: ", user);
                 bot.sendMessage(id, `Dạ, ${user.first_name}, ${first_name} nhắn gì kìa`);
-            } 
+            }
             else {
                 switch(entity.type) {
                     case 'mention':
                         bot.sendMessage(id, `Dạ ${first_name} ${last_name}, em nghe ?`);
                         break;
-        
+
                     case 'bot_command':
                         console.log('match: ', match);
                         break;
 
                     case 'email':
                         break;
-                        
+
                     case 'phone_number':
                         break;
 
                     default:
                         break;
-                }    
+                }
             }
         });
     }
@@ -63,7 +64,7 @@ bot.onText(/\/remind/, (message, match) => {
     .then(() => {
         bot.onText(/\/time ([01]\d|2[0-3]):([0-5]\d:[0-5]\d):(AM|PM)/,(message,match) => {
             console.log(match);
-            const time = match[0].split(' ')[1];          
+            const time = match[0].split(' ')[1];
             const docItem = String(message.chat.first_name + generator.randomStringGenerator(11));
 
             let seperateTime = time.split(':');
@@ -79,9 +80,9 @@ bot.onText(/\/remind/, (message, match) => {
                 numberTime[0] += 12;
             }
 
-        /*    cron.schedule(`${numberTime[1]} ${numberTime[0]} * * *`,()=>{
+            cron.schedule(`${numberTime[2]} ${numberTime[1]} ${numberTime[0]} * * *`,()=>{
                 bot.sendMessage(message.chat.id,`Họp thôi !!!!!!!!! ${first_name} ${last_name}, nhanh lên nào !!!`);
-            }); */
+            });
             bot.sendMessage(message.chat.id,`Cám ơn ${first_name} ${last_name}, em đã ghi giờ họp ${time} rồi nhen.`);
 
         });
@@ -95,7 +96,7 @@ bot.onText(/\/bug/, (message, match) => {
     console.log("CHAT: ", chat);
     console.log("match: ", match);
 
-    const { id, first_name, title, type } = chat; 
+    const { id, first_name, title, type } = chat;
     bot.sendMessage(id,`Bug ai người đó gánh, hỏi tui làm gì ????`)
 
 });
@@ -107,64 +108,8 @@ bot.onText(/\/hot/, (message, match) => {
     console.log("CHAT: ", chat);
     console.log("match: ", match);
 
-    const { id, first_name, title, type } = chat; 
+    const { id, first_name, title, type } = chat;
     bot.sendMessage(id,`Toàn bộ Đông Lào đang có 53 ca nhiễm. Em nghe đồn đã có ca 54 và 55 gần chỗ mát xa PXL :(`)
-});
-
-bot.onText(/\/trasua/, (message, match) => {
-    console.log("[ON TATSUA] ");
-    const { entities, from, chat } = message;
-    console.log("FROM: ", from);
-    console.log("CHAT: ", chat);
-    console.log("match: ", match);
-
-    const { id, first_name, title, type } = chat; 
-    if (entities) {
-        console.log("ENTITIES");
-        console.table(entities);
-    }
-
-    if (type && title && (type === 'group')) {
-        const { first_name , last_name } = from;
-        bot.sendMessage(id, 
-                        `Dạ, các anh chị ${title}, ${first_name} ${last_name} muốn mời trà sữa. Em có các menu sau`,
-                        {
-                            reply_markup: {
-                                inline_keyboard: [[
-                                    {
-                                        text: 'Trà sữa fuk long',
-                                        callback_data: 'fuklong'
-                                    }, {
-                                        text: 'Trà sữa tocotocha',
-                                        callback_data: 'tocotocha'
-                                    }, {
-                                        text: 'Tra sua nha lam',
-                                        callback_data: 'nhalam'
-                                    }
-                                ]]
-                            }
-                        });
-    }
-    else  {
-        const { first_name , last_name } = from; 
-        bot.sendMessage(id, `Sao ${first_name} ${last_name} lại uống trà sữa một mình vậy? Hay uống món khác nhé ?`, {
-            reply_markup: {
-                inline_keyboard: [[
-                    {
-                        text: 'Beer tươi',
-                        callback_data: 'fuklong'
-                    }, {
-                        text: 'The coffee house',
-                        callback_data: 'tocotocha'
-                    }, {
-                        text: 'Vẫn muốn trà sữa',
-                        callback_data: 'nhalam'
-                    }
-                ]]
-            }
-        });
-
-    }
 });
 
 bot.on('callback_query', query => {
