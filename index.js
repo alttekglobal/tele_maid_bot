@@ -2,6 +2,7 @@
 const { db } = require('./modules/persitance');
 const generator = require('./modules/helper');
 const cron = require('node-cron');
+const https = require('https');
 
 const YOUR_BOT_TOKEN = '1140790627:AAFNDpV-FJinAsGo38aHg7bifU6gC52SHzQ';
 const TelegramBot = require('node-telegram-bot-api'),
@@ -25,12 +26,12 @@ bot.on("message", (message, match) => {
             if (entity.user) {
                 const { user } = entity;
                 console.log("user: ", user);
-                bot.sendMessage(id, `Dạ, ${user.first_name}, ${first_name} nhắn gì kìa`);
+                bot.sendMessage(id, `Hey, ${user.first_name}, ${first_name} just mentioned you`);
             }
             else {
                 switch(entity.type) {
                     case 'mention':
-                        bot.sendMessage(id, `Dạ ${first_name} ${last_name}, em nghe ?`);
+                        bot.sendMessage(id, `Yes ${first_name} ${last_name}, what do you want me to do ?`);
                         break;
 
                     case 'bot_command':
@@ -52,6 +53,34 @@ bot.on("message", (message, match) => {
 });
 
 
+bot.onText(/\/covid/, (message, match) => {
+    console.log("[ON COVID] ");
+    const { entities, from, chat } = message;
+    console.log("FROM: ", from);
+    console.log("CHAT: ", chat);
+    console.log("match: ", match);
+    const { first_name, last_name } = chat;
+
+    https.get('https://corona.lmao.ninja/countries/vietnam', (resp) => {
+        let data = '';
+        resp.on('data', (chunk) => { 
+            data += chunk; 
+        });
+        
+        resp.on('end', () => {     
+            const result = JSON.parse(data);
+            bot.sendMessage(message.chat.id,`Today Vietnam has ${result.todayCases} new cases`).then(() => {
+                const todayDealths = result.todayDeaths == 0 ? `So lucky, no one die today` : `Sadly, ${result.deaths} confirmed death !`;
+                bot.sendMessage(message.chat.id, todayDealths).then(() => {
+                    bot.sendMessage(message.chat.id,`Vietnam has totally ${result.cases} confirmed`);
+                });
+            });
+        });
+    }).on("error", (err) => {
+        bot.sendMessage(message.chat.id,`Sorry, I cannot have data due to ${err.message}`)
+    })
+});
+
 bot.onText(/\/remind/, (message, match) => {
     console.log("[ON REMIND] ");
     const { entities, from, chat } = message;
@@ -60,7 +89,7 @@ bot.onText(/\/remind/, (message, match) => {
     console.log("match: ", match);
     const { first_name, last_name } = chat;
 
-    bot.sendMessage(message.chat.id,`Em ghi nhận! Mình họp giờ nào vậy? [ví dụ: /time (HH:MM:SS:AM|PM)]`)
+    bot.sendMessage(message.chat.id,`Got it! What time, please ? [For example: /time (HH:MM:SS:AM|PM)]`)
     .then(() => {
         bot.onText(/\/time ([01]\d|2[0-3]):([0-5]\d:[0-5]\d):(AM|PM)/,(message,match) => {
             console.log(match);
@@ -81,35 +110,12 @@ bot.onText(/\/remind/, (message, match) => {
             }
 
             cron.schedule(`${numberTime[2]} ${numberTime[1]} ${numberTime[0]} * * *`,()=>{
-                bot.sendMessage(message.chat.id,`Họp thôi !!!!!!!!! ${first_name} ${last_name}, nhanh lên nào !!!`);
+                bot.sendMessage(message.chat.id,`Meeting !!!!!!!!! ${first_name} ${last_name}, Hurry up !!!`);
             });
-            bot.sendMessage(message.chat.id,`Cám ơn ${first_name} ${last_name}, em đã ghi giờ họp ${time} rồi nhen.`);
+            bot.sendMessage(message.chat.id,`Thank ${first_name} ${last_name}, your meeting will be ${time}.`);
 
         });
     });
-});
-
-bot.onText(/\/bug/, (message, match) => {
-    console.log("[ON HOT] ");
-    const { entities, from, chat } = message;
-    console.log("FROM: ", from);
-    console.log("CHAT: ", chat);
-    console.log("match: ", match);
-
-    const { id, first_name, title, type } = chat;
-    bot.sendMessage(id,`Bug ai người đó gánh, hỏi tui làm gì ????`)
-
-});
-
-bot.onText(/\/hot/, (message, match) => {
-    console.log("[ON HOT] ");
-    const { entities, from, chat } = message;
-    console.log("FROM: ", from);
-    console.log("CHAT: ", chat);
-    console.log("match: ", match);
-
-    const { id, first_name, title, type } = chat;
-    bot.sendMessage(id,`Toàn bộ Đông Lào đang có 53 ca nhiễm. Em nghe đồn đã có ca 54 và 55 gần chỗ mát xa PXL :(`)
 });
 
 bot.on('callback_query', query => {
