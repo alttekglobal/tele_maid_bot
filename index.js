@@ -1,17 +1,23 @@
 
-const { db } = require('./modules/persitance');
+//const { db } = require('./modules/persitance');
 const generator = require('./modules/helper');
+
 const cron = require('node-cron');
 const https = require('https');
 
-const YOUR_BOT_TOKEN = '1140790627:AAFNDpV-FJinAsGo38aHg7bifU6gC52SHzQ';
-const TelegramBot = require('node-telegram-bot-api'),
-// Be sure to replace YOUR_BOT_TOKEN with your actual bot token on this line.
-bot = new TelegramBot(YOUR_BOT_TOKEN, { polling: true });
+const TELEGRAM_BOT_TOKEN = '';
+const GIPHY_TOKEN = '';
+
+const TelegramBot = require('node-telegram-bot-api');
+const giphy = require('giphy-api')(GIPHY_TOKEN);
+
+bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
 
 bot.on("message", (message, match) => {
     console.log("[ON MESSAGE] ");
-    const { entities, from, chat } = message;
+    console.log("me: ", bot.id);
+    const { entities, from, chat, text} = message;
+    console.log("origin: ", message);
     console.log("FROM: ", from);
     console.log("CHAT: ", chat);
     console.log("match: ", match);
@@ -32,10 +38,24 @@ bot.on("message", (message, match) => {
                 switch(entity.type) {
                     case 'mention':
                         bot.sendMessage(id, `Yes ${first_name} ${last_name}, what do you want me to do ?`);
+                        const giphyText = text.replace("@atg_maid", "").replace("_bot", "").trim();
+                        console.log("text to gif: ", giphyText);
+                        if (giphyText) {
+                            giphy.random(giphyText, function (err, res) {
+                                const url = res.data.url;
+                                console.log("URL: ", url)
+                                bot.sendMessage(id, (!err && url) ? url : 'just dont know why');
+                            });
+                        }
                         break;
 
                     case 'bot_command':
                         console.log('match: ', match);
+                        const searchTerm = text.replace('/', '').trim();
+                        if (['time','remind', 'covid'].indexOf(searchTerm) == -1) {
+                            bot.sendMessage(id, `${first_name} ${last_name}, I dont understand !`);
+                            bot.sendMessage(id, `You might want https://www.google.com/search?q=${searchTerm}`);
+                        }
                         break;
 
                     case 'email':
@@ -87,21 +107,22 @@ bot.onText(/\/remind/, (message, match) => {
     console.log("FROM: ", from);
     console.log("CHAT: ", chat);
     console.log("match: ", match);
-    const { first_name, last_name } = chat;
+    const { first_name, last_name } = chat.type && chat.type.indexOf('group') >= 0 ? from : chat;
 
     bot.sendMessage(message.chat.id,`Got it! What time, please ? [For example: /time (HH:MM:SS:AM|PM)]`)
     .then(() => {
-        bot.onText(/\/time ([01]\d|2[0-3]):([0-5]\d:[0-5]\d):(AM|PM)/,(message,match) => {
+        bot.onText(/\/time ([01]\d|2[0-3]):([0-5]\d:[0-5]\d):(AM|PM)/,(message, match) => {
             console.log(match);
             const time = match[0].split(' ')[1];
             const docItem = String(message.chat.first_name + generator.randomStringGenerator(11));
 
             let seperateTime = time.split(':');
+            console.log('seperateTime: ',seperateTime);
+
             let timeOfDay = seperateTime[seperateTime.length - 1];
 
             seperateTime.splice(seperateTime.length - 1, 1);
 
-            console.log(seperateTime);
             let numberTime = seperateTime.map(Number);
             console.log(timeOfDay.trim());
 
@@ -110,10 +131,14 @@ bot.onText(/\/remind/, (message, match) => {
             }
 
             cron.schedule(`${numberTime[2]} ${numberTime[1]} ${numberTime[0]} * * *`,()=>{
-                bot.sendMessage(message.chat.id,`Meeting !!!!!!!!! ${first_name} ${last_name}, Hurry up !!!`);
+                giphy.random("meeting", function (err, res) {
+                    const url = res.data.bitly_gif_url;
+                    const reminding = err ? `Meeting !!!!!!!!! ${first_name} ${last_name}, please stand up !!!!` : `Meeting !!!!!!!!! ${first_name} ${last_name} ${url}`;
+                    bot.sendMessage(message.chat.id, reminding);
+                });
+                console.log('meeting id: ', docItem);
             });
             bot.sendMessage(message.chat.id,`Thank ${first_name} ${last_name}, your meeting will be ${time}.`);
-
         });
     });
 });
@@ -133,14 +158,3 @@ bot.on('polling_error', (error) => {
 bot.on('error',(error)=>{
    return error;
 });
-
-const storeToken = (token, signingKey) => {
-    const values = [uuidv4(), token, signingKey, new Date().toISOString().slice(0, 19).replace('T', ' '), new Date().toISOString().slice(0, 19).replace('T', ' ')];
-    const statement = 'INSERT OR IGNORE INTO tokens (id, token, signing_key, date_created, date_modified) VALUES (?, ?, ?, ?, ?)';
-    db.run(statement, values, err =>{
-        if (err) {
-            return console.log(err.message);
-        }
-        console.log(`A row has been inserted with rowid ${this.lastID}`);
-    });
-};
