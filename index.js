@@ -10,8 +10,11 @@ const GIPHY_TOKEN = '';
 
 const TelegramBot = require('node-telegram-bot-api');
 const giphy = require('giphy-api')(GIPHY_TOKEN);
+const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
 
-bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
+const now = require('./now')
+now(bot)
+
 
 bot.on("message", (message, match) => {
     console.log("[ON MESSAGE] ");
@@ -71,7 +74,6 @@ bot.on("message", (message, match) => {
         });
     }
 });
-
 
 bot.onText(/\/covid/, (message, match) => {
     console.log("[ON COVID] ");
@@ -143,16 +145,9 @@ bot.onText(/\/remind/, (message, match) => {
     });
 });
 
-bot.on('callback_query', query => {
-    const { message, data } = query;
-    console.log('ON [callback_query]');
-    console.log('message: ', message);
-    console.log('data: ', data);
-});
-
 bot.on('polling_error', (error) => {
     return error;  // => 'EFATAL'
-  });
+});
 
 //Handle errors
 bot.on('error',(error)=>{
